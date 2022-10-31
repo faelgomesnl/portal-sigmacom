@@ -74,87 +74,87 @@ router.get('/orderserv', isLoggedIn, async (req, res) => {
 
     //contrato
     const links = await pool.query(`SELECT DISTINCT L.NUM_CONTRATO, PAR.NOMEPARC, CON.AD_LOCALIDADE,
-    PAR.CODPARC,  CON.CODUSUOS , L.ID_LOGIN,
-    CON.AD_CIRCUITO,
-    CD.NOMECID AS CIDADE,
-    (CONVERT(VARCHAR(45),EN.NOMEEND,103)) as LOGRADOURO,
-    CASE
-         WHEN CON.AD_CODOCOROS IS NULL THEN 900
-         ELSE CON.AD_CODOCOROS
-       END AS CARTEIRA
+        PAR.CODPARC, CON.CODUSUOS , L.ID_LOGIN,
+        CON.AD_CIRCUITO,
+        CD.NOMECID AS CIDADE,
+        (CONVERT(VARCHAR(45),EN.NOMEEND,103)) as LOGRADOURO,
+        CASE
+            WHEN CON.AD_CODOCOROS IS NULL THEN 900
+            ELSE CON.AD_CODOCOROS
+        END AS CARTEIRA
     FROM sankhya.AD_TBACESSO L
-    INNER JOIN sankhya.TCSCON CON ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
-    INNER JOIN sankhya.TGFPAR PAR ON (PAR.CODPARC = CON.CODPARC) 
-    INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
-    INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
-    INNER JOIN sankhya.TGFCTT C ON (PAR.CODPARC=C.CODPARC)
-    LEFT JOIN sankhya.TCSSLA SLA ON (SLA.NUSLA = CON.NUSLA)
-    LEFT JOIN sankhya.TCSRSL TC ON (SLA.NUSLA=TC.NUSLA)
-    LEFT JOIN sankhya.TSIBAI BR ON (PAR.CODBAI=BR.CODBAI)
-    LEFT JOIN sankhya.TSICID CD ON (CD.CODCID=PAR.CODCID)
-    LEFT JOIN sankhya.TSIEND EN ON (EN.CODEND=PAR.CODEND)
-    LEFT JOIN sankhya.TSIUFS UF ON (UF.UF=CD.UF)
-    LEFT JOIN sankhya.TFPLGR LG ON (LG.CODLOGRADOURO=EN.CODLOGRADOURO)
+        INNER JOIN sankhya.TCSCON CON ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
+        INNER JOIN sankhya.TGFPAR PAR ON (PAR.CODPARC = CON.CODPARC)
+        INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
+        INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
+        INNER JOIN sankhya.TGFCTT C ON (PAR.CODPARC=C.CODPARC)
+        LEFT JOIN sankhya.TCSSLA SLA ON (SLA.NUSLA = CON.NUSLA)
+        LEFT JOIN sankhya.TCSRSL TC ON (SLA.NUSLA=TC.NUSLA)
+        LEFT JOIN sankhya.TSIBAI BR ON (PAR.CODBAI=BR.CODBAI)
+        LEFT JOIN sankhya.TSICID CD ON (CD.CODCID=PAR.CODCID)
+        LEFT JOIN sankhya.TSIEND EN ON (EN.CODEND=PAR.CODEND)
+        LEFT JOIN sankhya.TSIUFS UF ON (UF.UF=CD.UF)
+        LEFT JOIN sankhya.TFPLGR LG ON (LG.CODLOGRADOURO=EN.CODLOGRADOURO)
     WHERE L.ID_LOGIN = ${idlogin}
-    AND CON.ATIVO = 'S'
-    AND PS.SITPROD IN ('A','B')
-    AND PD.USOPROD IN ('S', 'R')
-    AND TC.PRIORIDADE IS NULL
+        AND CON.ATIVO = 'S'
+        AND PS.SITPROD IN ('A','B')
+        AND PD.USOPROD IN ('S', 'R')
+        AND (PD.USOPROD ='S' AND PS.SITPROD <>'S')
+        AND TC.PRIORIDADE IS NULL
     ORDER BY CON.AD_CIRCUITO`);
 
     //contatos
-    const links2 = await pool.query(`SELECT DISTINCT 
-    UPPER  (CONVERT(VARCHAR(30),c.NOMECONTATO,103))+' - '+CONVERT(VARCHAR(30),con.NUMCONTRATO,103)+' -'+
-    CONVERT(VARCHAR(30),c.CODCONTATO,103) as CONTATO,
-    c.CODCONTATO AS CODCONT,
-    UPPER  (CONVERT(VARCHAR(30),c.NOMECONTATO,103)) as NOME
+    const links2 = await pool.query(`SELECT DISTINCT
+        UPPER  (CONVERT(VARCHAR(30),c.NOMECONTATO,103))+' - '+CONVERT(VARCHAR(30),con.NUMCONTRATO,103)+' -'+
+        CONVERT(VARCHAR(30),c.CODCONTATO,103) as CONTATO,
+        c.CODCONTATO AS CODCONT,
+        UPPER  (CONVERT(VARCHAR(30),c.NOMECONTATO,103)) as NOME
     from sankhya.TGFPAR P
-    INNER JOIN sankhya.TGFCTT C ON (P.CODPARC=C.CODPARC)
-    INNER JOIN sankhya.TCSCON CON ON (P.CODPARC = CON.CODPARC)
-    inner join sankhya.AD_TBACESSO L ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
-    INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
-    INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
+        INNER JOIN sankhya.TGFCTT C ON (P.CODPARC=C.CODPARC)
+        INNER JOIN sankhya.TCSCON CON ON (P.CODPARC = CON.CODPARC)
+        inner join sankhya.AD_TBACESSO L ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
+        INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
+        INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
     WHERE L.ID_LOGIN = ${idlogin}
-    AND CON.ATIVO = 'S'
-    AND PS.SITPROD IN ('A','B')
-    --AND PD.USOPROD='R'
-    order by CONTATO`);
+        AND CON.ATIVO = 'S'
+        AND PS.SITPROD IN ('A','B')
+        order by CONTATO`);
 
     //serviços
-    const links3 = await pool.query(`SELECT DISTINCT 
-    UPPER  (CONVERT(VARCHAR(50),PD.DESCRPROD,120))+' - '+CONVERT(VARCHAR(30),con.NUMCONTRATO,103)+' -'+
-    CONVERT(VARCHAR(30),PS.CODPROD,103) as PRODUTO,
-    con.NUMCONTRATO,
-     PD.DESCRPROD, 
-     PS.CODPROD
+    const links3 = await pool.query(`SELECT DISTINCT
+        UPPER  (CONVERT(VARCHAR(50),PD.DESCRPROD,120))+' - '+CONVERT(VARCHAR(30),con.NUMCONTRATO,103)+' -'+
+        CONVERT(VARCHAR(30),PS.CODPROD,103) as PRODUTO,
+        con.NUMCONTRATO,
+        PD.DESCRPROD,
+        PS.CODPROD
     from sankhya.TGFPAR P
-    INNER JOIN sankhya.TGFCTT C ON (P.CODPARC=C.CODPARC)
-    INNER JOIN sankhya.TCSCON CON ON (P.CODPARC = CON.CODPARC)
-    inner join sankhya.AD_TBACESSO L ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
-    INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
-    INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
+        INNER JOIN sankhya.TGFCTT C ON (P.CODPARC=C.CODPARC)
+        INNER JOIN sankhya.TCSCON CON ON (P.CODPARC = CON.CODPARC)
+        inner join sankhya.AD_TBACESSO L ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
+        INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
+        INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
     WHERE L.ID_LOGIN = ${idlogin}
-    AND PS.SITPROD IN ('A','B')
-    AND PD.USOPROD='S'
-    order by PRODUTO`);
+        AND PS.SITPROD IN('A','B')
+        AND PD.USOPROD='S'
+        order by PRODUTO`);
 
     //produtos
-    const links4 = await pool.query(`SELECT DISTINCT 
-    UPPER  (CONVERT(VARCHAR(50),PD.DESCRPROD,120))+' - '+CONVERT(VARCHAR(30),con.NUMCONTRATO,103)+' -'+
-    CONVERT(VARCHAR(30),PS.CODPROD,103) as PRODUTO,
-    con.NUMCONTRATO,
-     PD.DESCRPROD, 
-     PS.CODPROD
+    const links4 = await pool.query(`SELECT DISTINCT
+        UPPER  (CONVERT(VARCHAR(50),PD.DESCRPROD,120))+' - '+CONVERT(VARCHAR(30),con.NUMCONTRATO,103)+' -'+
+        CONVERT(VARCHAR(30),PS.CODPROD,103) as PRODUTO,
+        con.NUMCONTRATO,
+        PD.DESCRPROD,
+        PS.CODPROD
     from sankhya.TGFPAR P
-    INNER JOIN sankhya.TGFCTT C ON (P.CODPARC=C.CODPARC)
-    INNER JOIN sankhya.TCSCON CON ON (P.CODPARC = CON.CODPARC)
-    inner join sankhya.AD_TBACESSO L ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
-    INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
-    INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
+        INNER JOIN sankhya.TGFCTT C ON (P.CODPARC=C.CODPARC)
+        INNER JOIN sankhya.TCSCON CON ON (P.CODPARC = CON.CODPARC)
+        inner join sankhya.AD_TBACESSO L ON (L.NUM_CONTRATO = CON.NUMCONTRATO)
+        INNER JOIN sankhya.TCSPSC PS ON (CON.NUMCONTRATO=PS.NUMCONTRATO)
+        INNER JOIN sankhya.TGFPRO PD ON (PD.CODPROD=PS.CODPROD)
     WHERE L.ID_LOGIN = ${idlogin}
-    AND PS.SITPROD IN ('A','B')
-    AND PD.USOPROD='R'
-    order by PRODUTO`);
+        AND PS.SITPROD IN('A','B')
+        AND PD.USOPROD='R'
+        order by PRODUTO`);
 
     res.render('links/testes', {
         geral: links.recordset,
@@ -458,25 +458,17 @@ router.post('/orderserv', isLoggedIn, upload.single('file'), async (req, res) =>
     AND CH.ENTRADA IS NOT NULL
     AND CH.SAIDA IS NOT NULL
 `);
-
-    const prioridade = Object.values(links2.recordset[0])
-    var prioridadeFinal
-
-    if (prioridade === '') {
-        prioridadeFinal = 1440;
-    } else {
-        prioridadeFinal = prioridade;
-    }
-    //const prioridade = 1440
+    //const prioridade = Object.values(links2.recordset[0]) 
+    const prioridade = 1440
 
     await pool.query(`INSERT INTO sankhya.TCSOSE (NUMOS,NUMCONTRATO,DHCHAMADA,DTPREVISTA,CODPARC,CODCONTATO,CODATEND,CODUSURESP,DESCRICAO,SITUACAO,CODCOS,CODCENCUS,CODOAT,POSSUISLA) VALUES 
     ('${numos}','${contrato}',GETDATE(),(SELECT DATEADD(MI,${prioridade},GETDATE())),'${parceiro}','${contato}',110,110,'${textofin}','P','',30101,1000000,'S');
     INSERT INTO SANKHYA.TCSITE (NUMOS,NUMITEM,CODSERV,CODPROD,CODUSU,CODOCOROS,CODUSUREM,DHENTRADA,DHPREVISTA,CODSIT,COBRAR,RETRABALHO) VALUES 
-    ('${numos}',1,'${produto}','${servico}',1371,'${cart}',110,GETDATE(),(SELECT DATEADD(MI,${prioridadeFinal},GETDATE())),15,'N','N');
+    ('${numos}',1,'${produto}','${servico}',1371,'${cart}',110,GETDATE(),(SELECT DATEADD(MI,${prioridade},GETDATE())),15,'N','N');
     INSERT INTO sankhya.TSIATA (CODATA,DESCRICAO,ARQUIVO,CONTEUDO,CODUSU,DTALTER,TIPO) VALUES ('${numos}','ANEXO','${filetoupload}','${filetoupload}',1006,GETDATE(),'W')
 `);
 
-    req.flash('success', 'Ordem De Serviço Criada com Sucesso!!!! Nº: ', numos)
+    req.flash('success', 'Ordem De Serviço Criada com Sucesso!!!!')
     res.redirect('/links')
 
 });
